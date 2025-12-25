@@ -22,3 +22,4 @@ public class HealthController {
         return ResponseEntity.ok(ApiResponse.success("系统运行正常", data));
     }
 }
+

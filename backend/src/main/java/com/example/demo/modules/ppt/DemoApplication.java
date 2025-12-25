@@ -4,6 +4,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -12,6 +14,13 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 @SpringBootApplication
+@ComponentScan(
+    basePackages = "com.example.demo",
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.CUSTOM,
+        classes = com.example.demo.modules.resource.config.HealthControllerExcludeFilter.class
+    )
+)
 public class DemoApplication {
     public static void main(String[] args) {
         SpringApplication.run(DemoApplication.class, args);
