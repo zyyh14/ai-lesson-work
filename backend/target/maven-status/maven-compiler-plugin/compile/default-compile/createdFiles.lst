@@ -1,0 +1,14 @@
+com\example\demo\DemoApplication.class
+com\example\demo\controller\ImportController.class
+com\example\demo\model\Lesson.class
+com\example\demo\repository\ChatMessageRepository.class
+com\example\demo\controller\AiProxyController.class
+com\example\demo\model\ChatMessage.class
+com\example\demo\service\AdvancedPptImportService.class
+com\example\demo\dto\SyncLessonRequest.class
+com\example\demo\config\CorsConfig.class
+com\example\demo\controller\LessonController.class
+com\example\demo\repository\LessonRepository.class
+com\example\demo\service\AdvancedPptImportService$ContentResult.class
+com\example\demo\dto\FrontendMessage.class
+com\example\demo\controller\HealthController.class
