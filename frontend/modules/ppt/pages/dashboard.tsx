@@ -14,6 +14,17 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate();
 
+  // 处理模块点击
+  const handleModuleClick = (module: any) => {
+    if (module.external && module.externalUrl) {
+      // 打开新窗口到外部URL
+      window.open(module.externalUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      // 内部路由跳转
+      navigate(module.path);
+    }
+  };
+
   // 定义四个核心模块的配置
   const modules = [
     {
@@ -23,7 +34,9 @@ const Dashboard = () => {
       icon: <BookOpen className="w-8 h-8 text-white" />,
       color: "bg-gradient-to-br from-blue-500 to-blue-600",
       path: "/lesson-plan", // 对应同学 A 的路由
-      stats: "已创建 12 份"
+      stats: "已创建 12 份",
+      external: true, // 标记为外部链接
+      externalUrl: "http://localhost:3000" // lessonplan模块的URL
     },
     {
       id: 2,
@@ -78,7 +91,7 @@ const Dashboard = () => {
           </button>
           
           {/* 这里的链接也可以直接跳转到各模块 */}
-          <button onClick={() => navigate('/lesson-plan')} className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+          <button onClick={() => window.open('http://localhost:3000', '_blank', 'noopener,noreferrer')} className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
             <BookOpen className="w-5 h-5" /> 教案管理
           </button>
           <button onClick={() => navigate('/ppt-editor')} className="w-full flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
@@ -135,7 +148,7 @@ const Dashboard = () => {
             {modules.map((module) => (
               <div 
                 key={module.id}
-                onClick={() => navigate(module.path)}
+                onClick={() => handleModuleClick(module)}
                 className="group bg-white rounded-xl border border-gray-200 p-6 cursor-pointer hover:shadow-lg hover:border-blue-200 transition-all duration-300 transform hover:-translate-y-1"
               >
                 <div className="flex justify-between items-start mb-4">

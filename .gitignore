@@ -1,0 +1,31 @@
+# Node modules
+**/node_modules/
+**/.vite/
+
+# Database files
+**/data/*.db
+**/data/*.mv.db
+**/data/*.trace.db
+**/data/*.lock.db
+
+# Build outputs
+**/target/
+**/dist/
+**/build/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
