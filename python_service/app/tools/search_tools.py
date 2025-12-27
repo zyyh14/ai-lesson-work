@@ -19,15 +19,21 @@ def tavily_search(query: str) -> str:
     
     url = "https://api.tavily.com/search"
     
+    # 优化搜索参数，专注教育内容
     payload = {
         "api_key": settings.TAVILY_API_KEY,
-        "query": query,
+        "query": f"{query} 教学 教案 课程",  # 添加教育相关关键词
         "search_depth": "basic",
         "include_answer": False,
         "include_raw_content": True,
-        "max_results": 5,
+        "max_results": 8,  # 增加结果数量以便筛选
         "include_domains": [
-            "edu.cn", "jianshu.com", "zhihu.com", "bilibili.com", "xuexi.cn"
+            "edu.cn", "jianshu.com", "zhihu.com", "bilibili.com", 
+            "xuexi.cn", "baidu.com", "sohu.com", "163.com",
+            "teachermate.cn", "zxxk.com"  # 添加更多教育网站
+        ],
+        "exclude_domains": [
+            "github.com", "stackoverflow.com", "csdn.net"  # 排除技术网站
         ]
     }
     
@@ -37,17 +43,36 @@ def tavily_search(query: str) -> str:
         results = response.json()
         search_results = results.get("results", [])
         
-        # 格式化结果为JSON字符串
+        # 格式化结果为JSON字符串，并过滤低质量内容
         formatted_results = []
         for result in search_results:
+            content = result.get("content", "")
+            title = result.get("title", "")
+            
+            # 过滤掉明显的技术内容
+            if any(tech_word in content.lower() for tech_word in [
+                "javascript", "css", "html", "function", "var ", "const ", 
+                "import ", "export ", "class ", "div>", "<script", "github"
+            ]):
+                continue
+                
+            # 过滤掉明显的技术标题
+            if any(tech_word in title.lower() for tech_word in [
+                "github", "api", "javascript", "css", "html", "代码"
+            ]):
+                continue
+            
             formatted_results.append({
-                "title": result.get("title", ""),
+                "title": title,
                 "url": result.get("url", ""),
-                "content": result.get("content", "")[:500] if result.get("content") else "",
+                "content": content[:800] if content else "",  # 增加内容长度
                 "score": result.get("score", 0)
             })
         
-        return json.dumps(formatted_results, ensure_ascii=False)
+        # 按分数排序，取前5个
+        formatted_results.sort(key=lambda x: x.get("score", 0), reverse=True)
+        return json.dumps(formatted_results[:5], ensure_ascii=False)
+        
     except Exception as e:
         error_msg = f"Tavily搜索错误: {str(e)}"
         print(error_msg)

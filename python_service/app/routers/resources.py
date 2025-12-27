@@ -31,80 +31,71 @@ async def search_resources(
         if not isinstance(results, list) or len(results) == 0:
             return {"resources": [], "total": 0, "page": page, "limit": limit}
         
-        # 2. 爬取网页内容
-        import httpx
-        crawled_data = []
+        # 2. 清理和处理搜索结果
+        from ..utils.content_cleaner import clean_web_content, extract_educational_content, is_quality_content
         
-        for result in results[:limit]:
-            url = result.get('url', '')
+        processed_results = []
+        for result in results:
             title = result.get('title', '')
-            snippet = result.get('content', '')
+            content = result.get('content', '')
+            url = result.get('url', '')
             
-            # 尝试爬取网页
-            page_content = snippet
-            try:
-                async with httpx.AsyncClient(timeout=10.0) as client:
-                    response = await client.get(url, follow_redirects=True)
-                    if response.status_code == 200:
-                        # 简单提取文本（去除HTML标签）
-                        import re
-                        text = re.sub(r'<[^>]+>', '', response.text)
-                        text = re.sub(r'\s+', ' ', text).strip()
-                        page_content = text[:2000]  # 限制长度
-            except:
-                pass
+            # 深度清理内容
+            cleaned_content = clean_web_content(content)
             
-            crawled_data.append({
-                "title": title,
-                "url": url,
-                "content": page_content
-            })
+            # 提取教育相关内容
+            educational_content = extract_educational_content(cleaned_content)
+            
+            # 只保留高质量内容
+            if is_quality_content(educational_content) and len(educational_content) > 50:
+                processed_results.append({
+                    "title": title,
+                    "url": url,
+                    "content": educational_content[:500]  # 限制长度
+                })
         
-        # 3. 使用AI整理所有结果成一个完整报告
-        llm = ChatZhipuAI(
-            model="glm-4",
-            api_key=settings.ZHIPU_API_KEY,
-            temperature=0.3
-        )
+        if not processed_results:
+            return {"resources": [], "total": 0, "page": page, "limit": limit}
         
-        # 构建整理prompt
-        sources_text = "\n\n".join([
-            f"来源{i+1}: {item['title']}\n网址: {item['url']}\n内容: {item['content'][:500]}"
-            for i, item in enumerate(crawled_data)
-        ])
+        # 3. 构建简化的教学资源报告（不使用AI）
+        resource_content = f"""# {query} - 教学资源整理
+
+## 相关教学资源
+
+"""
         
-        prompt = f"""你是一位专业的教学资源整理专家。请根据以下搜索到的资源，为教师整理一份关于"{query}"的完整教学资源报告。
+        for i, item in enumerate(processed_results[:3], 1):
+            resource_content += f"""### 资源{i}: {item['title']}
 
-搜索到的资源：
-{sources_text}
+**内容摘要**: {item['content']}
 
-请按以下格式整理：
+**资源链接**: {item['url']}
 
-# {query} - 教学资源整理报告
+---
 
-## 一、资源概述
-[总结这些资源的主要内容和价值]
-
-## 二、核心知识点
-[提取关键的教学知识点]
-
-## 三、教学建议
-[给出具体的教学建议和方法]
-
-## 四、参考资源
-[列出所有来源网址]
-
-请确保内容专业、实用，适合教师直接使用。"""
+"""
         
-        ai_response = llm.invoke(prompt)
-        organized_report = ai_response.content if hasattr(ai_response, 'content') else str(ai_response)
+        resource_content += f"""
+## 教学建议
+
+基于以上搜索到的资源，建议教师：
+
+1. **多角度教学**: 结合不同资源的观点和方法，丰富教学内容
+2. **实践应用**: 将理论知识与实际案例相结合
+3. **互动教学**: 鼓励学生参与讨论和思考
+4. **资源整合**: 充分利用各类教学资源，提升教学效果
+
+## 参考资源
+
+{chr(10).join([f"- {item['title']}: {item['url']}" for item in processed_results[:5]])}
+"""
         
         # 4. 保存整理后的报告到数据库
         resource_data = {
             "title": f"{query} - 教学资源整理报告",
             "type": "教案",
-            "content": organized_report,
-            "source_url": ", ".join([item['url'] for item in crawled_data[:3]]),
+            "content": resource_content,
+            "source_url": ", ".join([item['url'] for item in processed_results[:3]]),
             "tags": query
         }
         

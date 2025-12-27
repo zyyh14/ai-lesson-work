@@ -25,6 +25,10 @@ app.include_router(resources.router, prefix=f"{settings.API_V1_STR}/resources", 
 app.include_router(exercises.router, prefix=settings.API_V1_STR, tags=["练习题生成"])
 app.include_router(favorites_simple.router, prefix=f"{settings.API_V1_STR}/favorites", tags=["收藏管理"])
 
+# 添加简化版搜索路由
+from .routers import resources_simple
+app.include_router(resources_simple.router, prefix=f"{settings.API_V1_STR}/resources", tags=["教学资源-简化版"])
+
 @app.get("/")
 async def root():
     """根路径，返回API信息"""
